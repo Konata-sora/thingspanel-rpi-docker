@@ -55,11 +55,11 @@ RUN mkdir -p /thingspanel/frontend && \
     tar -xzf dist.tar.gz && \
     rm dist.tar.gz
 
-# 配置TimescaleDB
-RUN sed -i "s/#shared_preload_libraries = ''/shared_preload_libraries = 'timescaledb'/g" /etc/postgresql/14/main/postgresql.conf
-
-# 配置PostgreSQL和TimescaleDB
+# 初始化PostgreSQL并配置TimescaleDB
 RUN service postgresql start && \
+    pg_ctlcluster 14 main start || true && \
+    sed -i "s/#shared_preload_libraries = ''/shared_preload_libraries = 'timescaledb'/g" /etc/postgresql/14/main/postgresql.conf && \
+    service postgresql restart && \
     sudo -u postgres psql -c "CREATE DATABASE \"ThingsPanel\";" && \
     sudo -u postgres psql -c "ALTER USER postgres WITH PASSWORD 'postgresThingsPanel';" && \
     sudo -u postgres psql -c "CREATE EXTENSION IF NOT EXISTS timescaledb;" -d "ThingsPanel"

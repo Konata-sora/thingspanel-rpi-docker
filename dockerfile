@@ -1,4 +1,4 @@
-FROM ubuntu:22.04
+FROM debian:bullseye-slim
 
 # 避免交互式提示
 ENV DEBIAN_FRONTEND=noninteractive
@@ -6,12 +6,9 @@ ENV DEBIAN_FRONTEND=noninteractive
 # 设置时区
 ENV TZ=Asia/Shanghai
 
-# 更新GPG密钥并安装基础包
-RUN apt-get clean && \
-    rm -rf /var/lib/apt/lists/* && \
-    apt-get update --fix-missing && \
-    apt-get install -y ca-certificates && \
-    apt-get update && apt-get install -y \
+# 安装基础包
+RUN apt-get update && \
+    apt-get install -y \
     apt-utils \
     curl \
     gnupg \
@@ -21,12 +18,13 @@ RUN apt-get clean && \
     nano \
     sudo \
     supervisor \
-    unzip
+    unzip \
+    ca-certificates
 
 # 安装PostgreSQL和TimescaleDB
-RUN sh -c "echo 'deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main' > /etc/apt/sources.list.d/pgdg.list" && \
+RUN sh -c "echo 'deb http://apt.postgresql.org/pub/repos/apt bullseye-pgdg main' > /etc/apt/sources.list.d/pgdg.list" && \
     wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add - && \
-    sh -c "echo 'deb https://packagecloud.io/timescale/timescaledb/ubuntu/ $(lsb_release -cs) main' > /etc/apt/sources.list.d/timescaledb.list" && \
+    sh -c "echo 'deb https://packagecloud.io/timescale/timescaledb/debian/ bullseye main' > /etc/apt/sources.list.d/timescaledb.list" && \
     wget --quiet -O - https://packagecloud.io/timescale/timescaledb/gpgkey | apt-key add - && \
     apt-get update && \
     apt-get install -y postgresql-14 timescaledb-2-postgresql-14 && \

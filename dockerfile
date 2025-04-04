@@ -11,7 +11,8 @@ RUN dnf install -y epel-release && \
     dnf makecache
 
 # 安装基础包
-RUN dnf update -y && \
+RUN dnf remove -y curl-minimal && \
+    dnf update -y && \
     dnf install -y \
     curl \
     gnupg \

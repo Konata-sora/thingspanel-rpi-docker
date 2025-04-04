@@ -1,12 +1,18 @@
-FROM alpine:3.19
+FROM rockylinux:9
 
 # 设置时区
 ENV TZ=Asia/Shanghai
 
+# 安装EPEL和其他必要的仓库
+RUN dnf install -y epel-release && \
+    dnf install -y dnf-utils && \
+    dnf config-manager --set-enabled crb && \
+    dnf install -y https://download.postgresql.org/pub/repos/yum/reporpms/EL-9-x86_64/pgdg-redhat-repo-latest.noarch.rpm && \
+    dnf -qy module disable postgresql
+
 # 安装基础包
-RUN apk update && \
-    apk add --no-cache \
-    bash \
+RUN dnf update -y && \
+    dnf install -y \
     curl \
     gnupg \
     wget \
@@ -16,26 +22,25 @@ RUN apk update && \
     supervisor \
     unzip \
     ca-certificates \
-    postgresql14 \
+    postgresql14-server \
     postgresql14-contrib \
     nginx \
     redis \
-    tzdata \
-    go
-
-# 设置PostgreSQL数据目录
-ENV PGDATA=/var/lib/postgresql/data
+    golang && \
+    dnf clean all
 
 # 初始化PostgreSQL
-RUN mkdir -p ${PGDATA} && \
-    chown -R postgres:postgres ${PGDATA} && \
-    su postgres -c "initdb -D ${PGDATA}" && \
-    echo "host all all 0.0.0.0/0 md5" >> ${PGDATA}/pg_hba.conf && \
-    echo "listen_addresses='*'" >> ${PGDATA}/postgresql.conf
+RUN /usr/pgsql-14/bin/postgresql-14-setup initdb && \
+    systemctl enable postgresql-14
+
+# 配置PostgreSQL
+RUN sed -i "s/#listen_addresses = 'localhost'/listen_addresses = '*'/" /var/lib/pgsql/14/data/postgresql.conf && \
+    sed -i "s/ident/md5/g" /var/lib/pgsql/14/data/pg_hba.conf && \
+    echo "host all all 0.0.0.0/0 md5" >> /var/lib/pgsql/14/data/pg_hba.conf
 
 # 设置Go环境
 ENV GOPATH=/go
-ENV PATH=$PATH:$GOPATH/bin
+ENV PATH=$PATH:$GOPATH/bin:/usr/pgsql-14/bin
 RUN go env -w GO111MODULE=on && \
     go env -w GOPROXY=https://goproxy.cn,direct
 
@@ -55,16 +60,17 @@ RUN mkdir -p /thingspanel/frontend && \
     rm dist.tar.gz
 
 # 初始化PostgreSQL数据库
-RUN su postgres -c "pg_ctl start -D ${PGDATA}" && \
+RUN su postgres -c "/usr/pgsql-14/bin/pg_ctl start -D /var/lib/pgsql/14/data" && \
     su postgres -c "createdb ThingsPanel" && \
     su postgres -c "psql -c \"ALTER USER postgres WITH PASSWORD 'postgresThingsPanel';\"" && \
-    su postgres -c "pg_ctl stop -D ${PGDATA}"
+    su postgres -c "/usr/pgsql-14/bin/pg_ctl stop -D /var/lib/pgsql/14/data"
 
 # 配置Redis
-RUN sed -i 's/# requirepass foobared/requirepass redis/g' /etc/redis/redis.conf
+RUN sed -i 's/# requirepass foobared/requirepass redis/g' /etc/redis/redis.conf && \
+    sed -i 's/bind 127.0.0.1/bind 0.0.0.0/g' /etc/redis/redis.conf
 
 # 配置Nginx
-COPY nginx.conf /etc/nginx/http.d/default.conf
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 # 编译GMQTT
 RUN cd /thingspanel/thingspanel-gmqtt/cmd/gmqttd && \
@@ -80,7 +86,7 @@ COPY thingspanel.yml /thingspanel/thingspanel-gmqtt/cmd/gmqttd/thingspanel.yml
 COPY backend_config.yml /thingspanel/thingspanel-backend-community/configs/conf.yml
 
 # 配置Supervisor
-COPY supervisord.conf /etc/supervisor.d/thingspanel.ini
+COPY supervisord.conf /etc/supervisord.d/thingspanel.ini
 
 # 开放端口
 EXPOSE 80 1883 8883 9999

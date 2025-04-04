@@ -1,7 +1,7 @@
-#!/bin/sh
+#!/bin/bash
 
 # 启动PostgreSQL
-su postgres -c "pg_ctl start -D /var/lib/postgresql/data"
+su postgres -c "/usr/pgsql-14/bin/pg_ctl start -D /var/lib/pgsql/14/data"
 
 # 启动Redis
 redis-server /etc/redis/redis.conf &

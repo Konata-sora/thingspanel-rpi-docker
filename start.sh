@@ -1,16 +1,16 @@
-#!/bin/bash
+#!/bin/sh
 
 # 启动PostgreSQL
-service postgresql start
+su postgres -c "pg_ctl start -D /var/lib/postgresql/data"
 
 # 启动Redis
-service redis-server start
+redis-server /etc/redis/redis.conf &
 
 # 启动Nginx
-service nginx start
+nginx
 
 # 使用Supervisor管理GMQTT和Backend服务
-/usr/bin/supervisord -c /etc/supervisor/supervisord.conf
+/usr/bin/supervisord -c /etc/supervisord.conf
 
 # 保持容器运行
 tail -f /dev/null

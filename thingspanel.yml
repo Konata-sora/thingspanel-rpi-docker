@@ -1,0 +1,19 @@
+db:
+  redis:
+    # redis 连接字符串
+    conn: 127.0.0.1:6379
+    # redis 数据库号
+    db_num: 1
+    # redis 密码
+    password: "redis"
+  psql:
+    psqladdr: "127.0.0.1"
+    psqlport: 5432
+    psqldb: ThingsPanel
+    psqluser: postgres
+    psqlpass: postgresThingsPanel
+mqtt:
+  # root用户的密码
+  broker: localhost:1883
+  password: "root"
+  plugin_password: "plugin"

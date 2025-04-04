@@ -1,0 +1,27 @@
+version: '3'
+
+services:
+  thingspanel:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: thingspanel-all-in-one:latest
+    container_name: thingspanel-all-in-one
+    restart: always
+    ports:
+      - "80:80"      # Nginx HTTP
+      - "1883:1883"  # MQTT
+      - "8883:8883"  # MQTT over TLS
+      - "9999:9999"  # Backend API
+      - "8082:8082"  # GMQTT HTTP API
+      - "8083:8083"  # GMQTT WebSocket
+      - "8084:8084"  # GMQTT API
+    volumes:
+      - thingspanel-data:/thingspanel/data
+      - postgres-data:/var/lib/postgresql/data
+      - redis-data:/var/lib/redis
+
+volumes:
+  thingspanel-data:
+  postgres-data:
+  redis-data:

@@ -1,0 +1,83 @@
+log:
+  level: info # 日志级别 debug | info | warn | error
+  
+system:
+  qos0_retry: false
+  prefetch: 50
+  queue_chan_cache: 10000
+  total_bytes_limit: 0
+  share_subscription_strategy: 1 # 1-random 2-hash 3-round-robin
+  connack_timeout: 2s
+  ack_timeout: 1s
+  mqueue_store_qos0: true
+  accept_stale_connections: true
+  event_loop_size: 0
+  enable_persist: true
+  persist_path: "./data"
+
+broker:
+  # 单个用户最大连接数
+  max_connections_per_user: 0
+  # client ID最大长度
+  max_client_id_len: 128
+  # 单个用户可发送的消息速率
+  user_property_size_limit: 8000
+  # 单个连接最大的inflight数
+  inflight_window_size: 10
+  # 单个连接最大的MQueue数
+  mqueue_size: 1000
+  # 最大报文大小
+  max_packet_size: 0
+  # 记录packet id
+  use_strict_packet_id: true
+  # 系统topic前缀，设置为null禁用
+  message_expiry_interval: 604800s
+
+  # 允许匿名登录
+  allow_anonymous: true
+  # 用户名密码文件路径，如果设置了，allow_anonymous必须为false
+  password_file: "default_password.yml"
+
+  #系统主题前缀，可设置多个
+  sys_topics:
+    - "$SYS/brokers/"
+
+session:
+  # 清理过期session任务间隔，设置为0取消离线期间topic消息发送
+  expired_interval: 1m
+  # session过期时间，设置为0表示当客户端断开连接是，session自动过期
+  expired_after: 1h
+  mqueue_expiry_interval: 1h
+  # 如果客户端离线当前消息队列存储的有效期, 设置为0永久有效
+  ignore_loop_deliver: 50
+
+listener:
+  # tcp配置
+  tcp:
+    address: ":1883"
+    # 秒
+    keepalive: 60
+  
+
+http:
+  # 接口端口
+  address: ":8082"
+  # 用户名密码，为空则不需要鉴权
+  user: ""
+  pass: ""
+  
+wbs:
+  # websocket接口端口
+  address: ":8083"
+
+api:
+  # HTTP API端口
+  address: ":8084"
+  # 用户名密码，为空则不需要鉴权
+  user: "root"
+  pass: "root"
+
+plugins:
+  # 插件文件夹
+  path: "./plugins"
+  expire_after: 3600

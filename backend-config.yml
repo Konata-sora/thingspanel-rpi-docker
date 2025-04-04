@@ -1,0 +1,96 @@
+service:
+  http: 
+    host: 0.0.0.0 
+    port: 9999
+
+log:
+  adapter_type: 0
+  maxdays: 7
+  level: debug
+  maxlines: 10000
+
+jwt:
+  key: 1hj5b0sp9
+
+db:
+  psql:
+    host: 127.0.0.1
+    port: 5432
+    dbname: ThingsPanel
+    username: postgres
+    password: postgresThingsPanel
+    time_zone: Asia/Shanghai
+    idle_conns: 5
+    open_conns: 50
+    log_level: 4
+    slow_threshold: 200
+
+  redis:
+    addr: 127.0.0.1:6379
+    db: 1
+    password: "redis"
+
+grpc:
+  tptodb_server: 127.0.0.1:50052
+  tptodb_type: TSDB
+
+mqtt_server: gmqtt
+
+mqtt:
+  access_address: 127.0.0.1:1883
+  broker: 127.0.0.1:1883
+  user: root
+  pass: root
+  channel_buffer_size: 10000
+  write_workers: 1
+  telemetry:
+    publish_topic: devices/telemetry/control/
+    subscribe_topic: devices/telemetry
+    gateway_subscribe_topic: gateway/telemetry
+    gateway_publish_topic: gateway/telemetry/control/%s
+    pool_size: 10
+    batch_size: 100
+    qos: 0
+  attributes:
+    subscribe_topic: devices/attributes/+
+    publish_response_topic: devices/attributes/response/
+    publish_topic: devices/attributes/set/
+    subscribe_response_topic: devices/attributes/set/response/+
+    publish_get_topic: devices/attributes/get/
+    gateway_subscribe_topic: gateway/attributes/+
+    gateway_publish_response_topic: gateway/attributes/response/%s/%s
+    gateway_publish_topic: gateway/attributes/set/%s/%s
+    gateway_subscribe_response_topic: gateway/attributes/set/response/+
+    gateway_publish_get_topic: gateway/attributes/get/%s
+    qos: 1
+  commands:
+    publish_topic: devices/command/
+    subscribe_topic: devices/command/response/+
+    gateway_subscribe_topic: gateway/command/response/+
+    gateway_publish_topic: gateway/command/%s/%s
+    qos: 1
+  events:
+    subscribe_topic: devices/event/+
+    publish_topic: devices/event/response/
+    gateway_subscribe_topic: gateway/event/+
+    gateway_publish_topic: gateway/event/response/%s/%s
+    qos: 1
+  ota:
+    publish_topic: ota/devices/infrom/
+    subscribe_topic: ota/devices/progress
+    qos: 1
+
+mqtts:
+  broker: 127.0.0.1:8883
+  user: root
+  pass: root
+  caPath : ./conf/certificate/ca.crt
+  crtPath: ./conf/certificate/client.crt
+  keyPath : ./conf/certificate/client.key
+
+automation_task_confg:
+  once_task_limit: 100
+  periodic_task_limit: 100
+
+ota:
+  download_address: http://localhost

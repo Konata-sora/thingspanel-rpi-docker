@@ -42,12 +42,23 @@ WORKDIR /thingspanel
 RUN git clone https://github.com/ThingsPanel/thingspanel-gmqtt.git && \
     git clone https://github.com/ThingsPanel/thingspanel-backend-community.git
 
-# 下载ThingsPanel前端
+# 下载ThingsPanel前端 - 使用特定版本
 RUN mkdir -p /thingspanel/frontend && \
     cd /thingspanel/frontend && \
-    wget -O dist.zip https://github.com/ThingsPanel/thingspanel-frontend-community/releases/latest/download/dist.zip && \
-    unzip dist.zip && \
-    rm dist.zip
+    # 克隆前端仓库
+    git clone --depth 1 https://github.com/ThingsPanel/thingspanel-frontend-community.git temp && \
+    # 复制dist目录（如果存在）或构建前端
+    if [ -d "temp/dist" ]; then \
+        cp -r temp/dist/* .; \
+    else \
+        cd temp && \
+        npm install -g pnpm && \
+        pnpm install && \
+        pnpm build && \
+        cp -r dist/* ../; \
+    fi && \
+    # 清理临时目录
+    rm -rf temp
 
 # 配置PostgreSQL和TimescaleDB
 RUN service postgresql start && \

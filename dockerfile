@@ -6,8 +6,12 @@ ENV DEBIAN_FRONTEND=noninteractive
 # 设置时区
 ENV TZ=Asia/Shanghai
 
-# 添加TimescaleDB存储库
-RUN apt-get update && apt-get install -y \
+# 更新GPG密钥并安装基础包
+RUN apt-get clean && \
+    rm -rf /var/lib/apt/lists/* && \
+    apt-get update --fix-missing && \
+    apt-get install -y ca-certificates && \
+    apt-get update && apt-get install -y \
     apt-utils \
     curl \
     gnupg \

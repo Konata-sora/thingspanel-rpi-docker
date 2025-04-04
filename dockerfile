@@ -3,12 +3,22 @@ FROM rockylinux:9
 # 设置时区
 ENV TZ=Asia/Shanghai
 
-# 安装EPEL和其他必要的仓库
+# 安装EPEL和基础工具
 RUN dnf install -y epel-release && \
     dnf install -y dnf-utils && \
     dnf config-manager --set-enabled crb && \
-    dnf install -y https://download.postgresql.org/pub/repos/yum/reporpms/EL-9-x86_64/pgdg-redhat-repo-latest.noarch.rpm && \
+    dnf clean all && \
+    dnf makecache
+
+# 安装PostgreSQL仓库
+RUN dnf -y install https://download.postgresql.org/pub/repos/yum/reporpms/EL-9-x86_64/pgdg-redhat-repo-latest.noarch.rpm && \
+    dnf clean all && \
+    dnf makecache && \
     dnf -qy module disable postgresql
+
+# 导入PostgreSQL GPG密钥
+RUN rpm --import https://download.postgresql.org/pub/repos/yum/RPM-GPG-KEY-PGDG && \
+    rpm --import https://download.postgresql.org/pub/repos/yum/RPM-GPG-KEY-PGDG-RHEL9
 
 # 安装基础包
 RUN dnf update -y && \

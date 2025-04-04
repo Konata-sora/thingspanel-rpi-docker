@@ -6,20 +6,27 @@ ENV DEBIAN_FRONTEND=noninteractive
 # 设置时区
 ENV TZ=Asia/Shanghai
 
-# 安装基础软件包
+# 添加TimescaleDB存储库
 RUN apt-get update && apt-get install -y \
     apt-utils \
     curl \
+    gnupg \
+    lsb-release \
     wget \
     git \
     nano \
-    nginx \
-    redis-server \
-    postgresql \
-    postgresql-contrib \
     sudo \
     supervisor \
     unzip
+
+# 安装PostgreSQL和TimescaleDB
+RUN sh -c "echo 'deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main' > /etc/apt/sources.list.d/pgdg.list" && \
+    wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add - && \
+    sh -c "echo 'deb https://packagecloud.io/timescale/timescaledb/ubuntu/ $(lsb_release -cs) main' > /etc/apt/sources.list.d/timescaledb.list" && \
+    wget --quiet -O - https://packagecloud.io/timescale/timescaledb/gpgkey | apt-key add - && \
+    apt-get update && \
+    apt-get install -y postgresql-14 timescaledb-2-postgresql-14 && \
+    apt-get install -y nginx redis-server
 
 # 安装Go 1.22
 RUN wget https://go.dev/dl/go1.22.0.linux-arm64.tar.gz && \
@@ -41,12 +48,15 @@ WORKDIR /thingspanel
 RUN git clone https://github.com/ThingsPanel/thingspanel-gmqtt.git && \
     git clone https://github.com/ThingsPanel/thingspanel-backend-community.git
 
-# 下载ThingsPanel前端 - 使用正确的URL
+# 下载ThingsPanel前端
 RUN mkdir -p /thingspanel/frontend && \
     cd /thingspanel/frontend && \
     wget -O dist.tar.gz https://github.com/ThingsPanel/thingspanel-frontend-community/releases/download/latest/dist.tar.gz && \
     tar -xzf dist.tar.gz && \
     rm dist.tar.gz
+
+# 配置TimescaleDB
+RUN sed -i "s/#shared_preload_libraries = ''/shared_preload_libraries = 'timescaledb'/g" /etc/postgresql/14/main/postgresql.conf
 
 # 配置PostgreSQL和TimescaleDB
 RUN service postgresql start && \

@@ -10,16 +10,6 @@ RUN dnf install -y epel-release && \
     dnf clean all && \
     dnf makecache
 
-# 安装PostgreSQL仓库
-RUN dnf -y install https://download.postgresql.org/pub/repos/yum/reporpms/EL-9-x86_64/pgdg-redhat-repo-latest.noarch.rpm && \
-    dnf clean all && \
-    dnf makecache && \
-    dnf -qy module disable postgresql
-
-# 导入PostgreSQL GPG密钥
-RUN rpm --import https://download.postgresql.org/pub/repos/yum/RPM-GPG-KEY-PGDG && \
-    rpm --import https://download.postgresql.org/pub/repos/yum/RPM-GPG-KEY-PGDG-RHEL9
-
 # 安装基础包
 RUN dnf update -y && \
     dnf install -y \
@@ -32,25 +22,25 @@ RUN dnf update -y && \
     supervisor \
     unzip \
     ca-certificates \
-    postgresql14-server \
-    postgresql14-contrib \
+    postgresql-server \
+    postgresql-contrib \
     nginx \
     redis \
     golang && \
     dnf clean all
 
 # 初始化PostgreSQL
-RUN /usr/pgsql-14/bin/postgresql-14-setup initdb && \
-    systemctl enable postgresql-14
+RUN postgresql-setup --initdb && \
+    systemctl enable postgresql
 
 # 配置PostgreSQL
-RUN sed -i "s/#listen_addresses = 'localhost'/listen_addresses = '*'/" /var/lib/pgsql/14/data/postgresql.conf && \
-    sed -i "s/ident/md5/g" /var/lib/pgsql/14/data/pg_hba.conf && \
-    echo "host all all 0.0.0.0/0 md5" >> /var/lib/pgsql/14/data/pg_hba.conf
+RUN sed -i "s/#listen_addresses = 'localhost'/listen_addresses = '*'/" /var/lib/pgsql/data/postgresql.conf && \
+    sed -i "s/ident/md5/g" /var/lib/pgsql/data/pg_hba.conf && \
+    echo "host all all 0.0.0.0/0 md5" >> /var/lib/pgsql/data/pg_hba.conf
 
 # 设置Go环境
 ENV GOPATH=/go
-ENV PATH=$PATH:$GOPATH/bin:/usr/pgsql-14/bin
+ENV PATH=$PATH:$GOPATH/bin
 RUN go env -w GO111MODULE=on && \
     go env -w GOPROXY=https://goproxy.cn,direct
 
@@ -70,10 +60,10 @@ RUN mkdir -p /thingspanel/frontend && \
     rm dist.tar.gz
 
 # 初始化PostgreSQL数据库
-RUN su postgres -c "/usr/pgsql-14/bin/pg_ctl start -D /var/lib/pgsql/14/data" && \
+RUN su postgres -c "pg_ctl start -D /var/lib/pgsql/data" && \
     su postgres -c "createdb ThingsPanel" && \
     su postgres -c "psql -c \"ALTER USER postgres WITH PASSWORD 'postgresThingsPanel';\"" && \
-    su postgres -c "/usr/pgsql-14/bin/pg_ctl stop -D /var/lib/pgsql/14/data"
+    su postgres -c "pg_ctl stop -D /var/lib/pgsql/data"
 
 # 配置Redis
 RUN sed -i 's/# requirepass foobared/requirepass redis/g' /etc/redis/redis.conf && \
